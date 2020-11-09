@@ -1,20 +1,34 @@
-FROM fulsome/alpine:
+FROM debian:jessie as build
+
+RUN apt-get -y update
+RUN apt-get -y install curl build-essential libpcre3 libpcre3-dev zlib1g-dev libssl-dev git
+
+RUN curl -LO https://nginx.org/download/nginx-1.18.0.tar.gz && \
+    tar zxf nginx-1.18.0.tar.gz && \
+    cd nginx-1.18.0 && \
+    ./configure --with-cc-opt="-static -static-libgcc" --with-ld-opt="-static" \
+    --with-http_ssl_module && \
+    make -j1 && \
+    make install
+
+RUN mkdir -p /opt && \
+    mkdir -p /opt/www && \
+    mkdir -p /opt/data/cache && \
+    mkdir -p /opt/data/logs && \
+    mkdir -p /opt/usr/local/nginx/conf && \
+    cp -a /usr/local/nginx/sbin/nginx /opt/nginx && \
+    cp -a /usr/local/nginx/conf/mime.types /opt/mime.types && \
+    cp -a --parents /usr/local/nginx /opt && \
+    cp -a --parents /etc/passwd /opt && \
+    cp -a --parents /etc/group /opt
+
+FROM gcr.io/distroless/base
 LABEL Maintainer="Brian Robertson <brian@fulso.me>" \
-      Description="Minimal nginx"
-
-RUN apk add --no-cache nginx
-
-RUN adduser -D -g 'www' www
+      Description="Distroless Nginx"
 
 COPY nginx.conf /etc/nginx/nginx.conf
+COPY --from=build /opt /
 
-RUN mkdir /www
-RUN chown -R www:www /var/lib/nginx &&\
-    chown -R www:www /www &&\
-    chown -R www:www /var/log &&\
-    chown -R www:www /run
+CMD [ "/nginx", "-g", "daemon off;" ]
 
-EXPOSE 8080
-USER www
-# define user in nginx and php, run init as root
-CMD ["nginx", "-g", "daemon off;"]
+# vim: set filetype=dockerfile :

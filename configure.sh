@@ -1,7 +1,7 @@
 #!/bin/bash
 
 NAME=nginx
-VERSION=1.0.0
+VERSION=1.18
 PATCH_VERSION=0
 
 printf '\nConfiguring Dockerfile.\n'
@@ -23,8 +23,8 @@ then
   printf 'with a size of %s\n' "\$(docker images | grep -P 'fulsome/'"$NAME"'\s*'"$VERSION.$PATCH_VERSION" | grep -oP '\d*\.?\d*(k|M|G)B')"
   
   printf '\nWriting commit file\n'
-  printf 'docker push fulsome/"%s:%s.%s"\n' "$NAME" "$VERSION" "$PATCH_VERSION" > commit.sh
-  printf 'docker push fulsome/"%s:%s"\n' "$NAME" "$VERSION" >> commit.sh
+  printf 'docker push fulsome/"%s:%s"\n' "$NAME" "$VERSION" > commit.sh
+  # printf 'docker push fulsome/"%s:%s.%s"\n' "$NAME" "$VERSION" "$PATCH_VERSION" >> commit.sh
   chmod +x commit.sh
 else
   exit 1
